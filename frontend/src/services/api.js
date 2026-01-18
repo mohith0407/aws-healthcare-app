@@ -42,3 +42,16 @@ export const fetchAppointments = async (patientId) => {
     return [];
   }
 };
+
+export const fetchAvailableSlots = async (doctorId, date) => {
+  try {
+    // Call the backend: /slots?doctorId=1&date=2025-01-20
+    const response = await axios.get(`${API_URL}/slots`, {
+      params: { doctorId, date }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching slots:", error);
+    return []; // Return empty list if error (safe fallback)
+  }
+};

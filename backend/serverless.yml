@@ -34,7 +34,7 @@ functions:
 
   # 2. Get List of Doctors
   getDoctors:
-    handler: doctors.list
+    handler: src/handlers/doctors.list
     events:
       - http:
           path: doctors
@@ -43,7 +43,7 @@ functions:
 
   # 3. Create a Doctor (For internal use/seeding)
   createDoctor:
-    handler: doctors.create
+    handler: src/handler/doctors.create
     events:
       - http:
           path: doctors
@@ -52,7 +52,7 @@ functions:
 
   # 4. Book Appointment
   bookAppointment:
-    handler: appointments.book
+    handler: src/handlers/appointments.book
     events:
       - http:
           path: appointments
@@ -60,10 +60,18 @@ functions:
           cors: true
   # 5. Get Patient Appointments
   getAppointments:
-    handler: appointments.list
+    handler: src/handlers/appointments.list
     events:
       - http:
           path: appointments
+          method: get
+          cors: true
+  # 6. Get Available Slots
+  getAvailableSlots:
+    handler: src/handlers/appointments.getSlots
+    events:
+      - http:
+          path: slots
           method: get
           cors: true
 # --- INFRASTRUCTURE (DATABASE TABLES) ---
