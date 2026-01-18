@@ -1,0 +1,90 @@
+service: healthcare-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: ap-south-1
+  environment:
+    DOCTORS_TABLE: ${self:service}-${self:provider.stage}-doctors
+    APPOINTMENTS_TABLE: ${self:service}-${self:provider.stage}-appointments
+  # --- SECURITY PERMISSIONS ---
+  # This section gives your Lambda functions permission to Read/Write to DynamoDB
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "*"
+
+# --- API ENDPOINTS (FUNCTIONS) ---
+functions:
+  # 1. Health Check
+  healthCheck:
+    handler: handler.healthCheck
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+
+  # 2. Get List of Doctors
+  getDoctors:
+    handler: doctors.list
+    events:
+      - http:
+          path: doctors
+          method: get
+          cors: true
+
+  # 3. Create a Doctor (For internal use/seeding)
+  createDoctor:
+    handler: doctors.create
+    events:
+      - http:
+          path: doctors
+          method: post
+          cors: true
+
+  # 4. Book Appointment
+  bookAppointment:
+    handler: appointments.book
+    events:
+      - http:
+          path: appointments
+          method: post
+          cors: true
+# --- INFRASTRUCTURE (DATABASE TABLES) ---
+resources:
+  Resources:
+    # 1. Doctors Table
+    DoctorsTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        # Creates table name: healthcare-api-dev-doctors
+        TableName: ${self:service}-${self:provider.stage}-doctors
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    # 2. Appointments Table
+    AppointmentsTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        # Creates table name: healthcare-api-dev-appointments
+        TableName: ${self:service}-${self:provider.stage}-appointments
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
