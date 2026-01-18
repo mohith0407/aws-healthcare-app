@@ -58,6 +58,14 @@ functions:
           path: appointments
           method: post
           cors: true
+  # 5. Get Patient Appointments
+  getAppointments:
+    handler: appointments.list
+    events:
+      - http:
+          path: appointments
+          method: get
+          cors: true
 # --- INFRASTRUCTURE (DATABASE TABLES) ---
 resources:
   Resources:
