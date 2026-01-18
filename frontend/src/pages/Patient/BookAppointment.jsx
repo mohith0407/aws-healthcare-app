@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Seo from '../../components/utils/Seo';
-import { DOCTORS, getAvailableSlots } from '../../services/mockData';
+// import { DOCTORS, getAvailableSlots } from '../../services/mockData';
+import { fetchDoctors, bookAppointment, getAvailableSlots } from '../../services/api';
 import { FaUserMd, FaCalendarAlt, FaClock, FaCheckCircle } from 'react-icons/fa';
 
 const BookAppointment = () => {
   // --- STATE ---
+  const [doctors, setDoctors] = useState([]);
   const [step, setStep] = useState(1); // 1: Doctor, 2: Date/Time, 3: Confirm
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
@@ -16,6 +18,13 @@ const BookAppointment = () => {
   
   // When a date is picked, fetch slots
   useEffect(() => {
+    const load = async () => {
+      const data = await fetchDoctors();
+      setDoctors(data);
+    };
+    load();
+  }, []);
+  useEffect(() => {
     if (selectedDoctor && selectedDate) {
       setLoadingSlots(true);
       setAvailableSlots([]); // Clear previous
@@ -26,21 +35,28 @@ const BookAppointment = () => {
     }
   }, [selectedDate, selectedDoctor]);
 
-  const handleBook = () => {
+  const handleBook =async () => {
     // TODO: Send to backend
-    const payload = {
+    try{const payload = {
+      patientId: "test-user-01", // Hardcoded for now
       doctorId: selectedDoctor.id,
-      date: selectedDate,
-      slot: selectedSlot,
-      patientId: 'currentUser.id' // From AuthContext
+      doctorName: selectedDoctor.name,
+      date: date.toISOString().split('T')[0], // Format: YYYY-MM-DD
+      slot: selectedSlot
     };
+    await bookAppointment(payload); // <--- Sends to AWS
+
+    setBookingSuccess(true);
     console.log('Booking Payload:', payload);
     alert('Appointment Booked Successfully!');
     // Redirect to Dashboard or Reset
     setStep(1);
     setSelectedDoctor(null);
     setSelectedDate('');
-    setSelectedSlot('');
+    setSelectedSlot('');}
+    catch (err) {
+    alert("Booking failed! Check console.");
+  }
   };
 
   return (
@@ -63,7 +79,7 @@ const BookAppointment = () => {
             <FaUserMd className="text-primary"/> Select a Doctor
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {DOCTORS.map((doc) => (
+            {doctors.map((doc) => (
               <div 
                 key={doc.id}
                 onClick={() => { setSelectedDoctor(doc); setStep(2); }}
