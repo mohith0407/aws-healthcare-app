@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0ea5e9;
+  --color-secondary: #64748b;
+  --color-accent: #3b82f6;
+}
+@layer base {
+  /* Set defaults for consistency */
+  body {
+    @apply text-slate-800 bg-slate-50 antialiased font-sans;
+  }
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+  h2 {
+    @apply text-2xl font-semibold;
+  }
+}
+
+@layer components {
+  /* Reusable Button Class */
+  .btn-primary {
+    @apply px-6 py-2.5 bg-primary text-white font-medium rounded-lg 
+           hover:bg-sky-600 transition-all duration-300 shadow-md 
+           hover:shadow-lg focus:ring-4 focus:ring-sky-300 focus:outline-none;
+  }
+
+  .btn-outline {
+    @apply px-6 py-2.5 border-2 border-primary text-primary font-medium rounded-lg
+           hover:bg-primary hover:text-white transition-all duration-300;
+  }
+
+  /* Input Fields */
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 
+           focus:ring-primary focus:border-transparent outline-none transition-all;
+  }
+  
+  /* Container for Page alignment */
+  .container-main {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
