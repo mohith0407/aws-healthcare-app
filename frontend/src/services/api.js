@@ -30,3 +30,15 @@ export const getAvailableSlots = () => {
     '09:00 AM', '10:00 AM', '02:00 PM', '04:00 PM'
   ]);
 };
+
+// 
+export const fetchAppointments = async (patientId) => {
+  try {
+    // We pass the patientId as a query parameter
+    const response = await axios.get(`${API_URL}/appointments?patientId=${patientId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    return [];
+  }
+};

@@ -37,16 +37,16 @@ const BookAppointment = () => {
 
   const handleBook =async () => {
     // TODO: Send to backend
+    const formattedDate = new Date(selectedDate).toISOString().split('T')[0];
     try{const payload = {
       patientId: "test-user-01", // Hardcoded for now
       doctorId: selectedDoctor.id,
       doctorName: selectedDoctor.name,
-      date: date.toISOString().split('T')[0], // Format: YYYY-MM-DD
+      date: formattedDate, // Format: YYYY-MM-DD
       slot: selectedSlot
     };
     await bookAppointment(payload); // <--- Sends to AWS
-
-    setBookingSuccess(true);
+    // setBookingSuccess(true);
     console.log('Booking Payload:', payload);
     alert('Appointment Booked Successfully!');
     // Redirect to Dashboard or Reset
@@ -56,6 +56,8 @@ const BookAppointment = () => {
     setSelectedSlot('');}
     catch (err) {
     alert("Booking failed! Check console.");
+    console.error("Booking Error:", err);
+    console.log('Booking date:', formattedDate);
   }
   };
 

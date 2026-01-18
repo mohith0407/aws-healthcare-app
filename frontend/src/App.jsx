@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/utils/ProtectedRoute';
 import DashboardLayout from './components/templates/DashboardLayout';
+// import  from './pages/patient/MyAppointments';
 
 // Lazy Load Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -10,11 +11,11 @@ const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 
 const BookAppointment = lazy(() => import('./pages/patient/BookAppointment'));
+const MyAppointments = lazy(() => import('./pages/patient/MyAppointments'));
 // Lazy Load Dashboards
 const AdminDashboard = lazy(() => import('./pages/dashboards/AdminDashboard'));
 const DoctorDashboard = lazy(() => import('./pages/dashboards/DoctorDashboard'));
 const PatientDashboard = lazy(() => import('./pages/dashboards/PatientDashboard'));
-
 // Reusable Loader
 const PageLoader = () => (
   <div className="flex items-center justify-center h-screen text-primary">
@@ -57,6 +58,7 @@ function App() {
    <Route path="/patient/dashboard" element={<PatientDashboard />} />
    {/* NEW ROUTE */}
    <Route path="/patient/book-appointment" element={<BookAppointment />} />
+   <Route path="/my-appointments" element={<MyAppointments />} />
 </Route>
         {/* 404 Route (Optional but recommended) */}
         <Route path="*" element={<div className="text-center mt-20">404 - Page Not Found</div>} />
