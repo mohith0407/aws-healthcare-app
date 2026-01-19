@@ -6,9 +6,15 @@ import Navbar from '../components/organisms/Navbar';
 import Seo from '../components/utils/Seo';
 import { useAuth } from '../context/AuthContext';
 
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../src/redux/slices/authSlice';
+
 const Login = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  // Read data from Redux Store
+  const { loading, error } = useSelector((state) => state.auth);
+  // const { login } = useAuth();
   // State for Role Selection (Default to Patient)
   const [role, setRole] = useState('patient');
   
@@ -21,20 +27,26 @@ const Login = () => {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log(`Logging in as ${role}:`, formData);
-    // TODO: Connect to AuthContext/Backend API
-    // navigate('/dashboard'); 
-    try {
-    const { role: userRole } = await login(formData.email, formData.password);
+  //   console.log(`Logging in as ${role}:`, formData);
+  //   // TODO: Connect to AuthContext/Backend API
+  //   // navigate('/dashboard'); 
+  //   try {
+  //   const { role: userRole } = await login(formData.email, formData.password);
     
-    // Redirect based on role
-    if (userRole === 'admin') navigate('/admin/dashboard');
-    else if (userRole === 'doctor') navigate('/doctor/dashboard');
-    else navigate('/patient/dashboard');
+  //   // Redirect based on role
+  //   if (userRole === 'admin') navigate('/admin/dashboard');
+  //   else if (userRole === 'doctor') navigate('/doctor/dashboard');
+  //   else navigate('/patient/dashboard');
     
-  } catch (error) {
-    alert(error.message); // Simple alert for now
-  }
+  // } catch (error) {
+  //   alert(error.message); // Simple alert for now
+  // }
+  const result = await dispatch(loginUser({ email: 'patient@doc.com', password: '123' }));
+    
+    // Check if login was successful
+    if (loginUser.fulfilled.match(result)) {
+      navigate('/patient/dashboard');
+    }
   };
 
   return (
@@ -68,6 +80,7 @@ const Login = () => {
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            {error && <p className="text-red-500">{error}</p>}
             <InputGroup 
               label="Email Address" 
               name="email" 

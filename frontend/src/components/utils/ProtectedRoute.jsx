@@ -1,21 +1,20 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 const ProtectedRoute = ({ allowedRoles }) => {
-  const { user } = useAuth();
+  const location = useLocation();
+  
+  // 1. Get user from Redux Store
+  const { user } = useSelector((state) => state.auth);
 
   if (!user) {
-    // 1. User not logged in? -> Go to Login
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // 2. User logged in but wrong role? -> Go Home (or 403 Forbidden page)
     return <Navigate to="/" replace />;
   }
 
-  // 3. Authorized? -> Render the child routes
+  // Authorized? -> Render the child routes
   return <Outlet />;
 };
 

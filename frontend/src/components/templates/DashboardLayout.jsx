@@ -1,14 +1,19 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../redux/slices/authSlice';
 import { FaUserMd, FaUsers, FaCalendarAlt, FaSignOutAlt, FaHome } from 'react-icons/fa'; // Ensure react-icons is installed
 
 const DashboardLayout = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  
+  // 1. Get User Data for UI
+  const { user } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
-    logout();
+    dispatch(logout());
     navigate('/login');
   };
 
