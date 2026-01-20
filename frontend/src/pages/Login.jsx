@@ -1,51 +1,44 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../redux/slices/authSlice'; 
+
 import InputGroup from '../components/atoms/InputGroup';
 import Button from '../components/atoms/Button';
 import Navbar from '../components/organisms/Navbar';
 import Seo from '../components/utils/Seo';
-import { useAuth } from '../context/AuthContext';
-
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../../src/redux/slices/authSlice';
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // Read data from Redux Store
-  const { loading, error } = useSelector((state) => state.auth);
-  // const { login } = useAuth();
-  // State for Role Selection (Default to Patient)
-  const [role, setRole] = useState('patient');
   
-  // Form State
+  // Get Redux State
+  const { loading, error } = useSelector((state) => state.auth);
+  
   const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-  //   console.log(`Logging in as ${role}:`, formData);
-  //   // TODO: Connect to AuthContext/Backend API
-  //   // navigate('/dashboard'); 
-  //   try {
-  //   const { role: userRole } = await login(formData.email, formData.password);
     
-  //   // Redirect based on role
-  //   if (userRole === 'admin') navigate('/admin/dashboard');
-  //   else if (userRole === 'doctor') navigate('/doctor/dashboard');
-  //   else navigate('/patient/dashboard');
-    
-  // } catch (error) {
-  //   alert(error.message); // Simple alert for now
-  // }
-  const result = await dispatch(loginUser({ email: 'patient@doc.com', password: '123' }));
-    
-    // Check if login was successful
-    if (loginUser.fulfilled.match(result)) {
-      navigate('/patient/dashboard');
+    // 1. Dispatch Login Action
+    const resultAction = await dispatch(loginUser(formData));
+
+    // 2. Check if login succeeded
+    if (loginUser.fulfilled.match(resultAction)) {
+      const user = resultAction.payload;
+      
+      // 3. Dynamic Redirect based on Role
+      if (user.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (user.role === 'doctor') {
+        navigate('/doctor/dashboard');
+      } else {
+        navigate('/patient/dashboard');
+      }
     }
   };
 
@@ -62,25 +55,14 @@ const Login = () => {
             <p className="mt-2 text-sm text-gray-600">Please sign in to your account</p>
           </div>
 
-          {/* Role Toggles - Polymorphic UI */}
-          <div className="flex bg-gray-100 p-1 rounded-lg">
-            {['patient', 'doctor', 'admin'].map((r) => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                className={`flex-1 py-2 text-sm font-medium rounded-md capitalize transition-all ${
-                  role === r 
-                    ? 'bg-white text-primary shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {error && <p className="text-red-500">{error}</p>}
+            {/* Show Redux Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded">
+                {error}
+              </div>
+            )}
+            
             <InputGroup 
               label="Email Address" 
               name="email" 
@@ -101,19 +83,17 @@ const Login = () => {
               required 
             />
 
-            <Button type="submit" className="w-full">
-              Sign In as {role.charAt(0).toUpperCase() + role.slice(1)}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
-          {role !== 'admin' && (
-            <p className="text-center text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to={`/signup?role=${role}`} className="font-medium text-primary hover:text-sky-600">
-                Sign up
-              </Link>
-            </p>
-          )}
+          <p className="text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/signup" className="font-medium text-primary hover:text-sky-600">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </div>

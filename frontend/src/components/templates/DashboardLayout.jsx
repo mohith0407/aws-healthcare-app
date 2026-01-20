@@ -1,25 +1,30 @@
 import React from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../redux/slices/authSlice';
-import { FaUserMd, FaUsers, FaCalendarAlt, FaSignOutAlt, FaHome } from 'react-icons/fa'; // Ensure react-icons is installed
+import { logoutUser } from '../../redux/slices/authSlice';
+import { FaUserMd, FaUsers, FaCalendarAlt, FaSignOutAlt, FaHome } from 'react-icons/fa';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // 1. Get User Data for UI
-  const { user } = useSelector((state) => state.auth);
+  // Select only necessary auth state
+  const { user, loading } = useSelector((state) => state.auth);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      // Dispatch the thunk and wait for it to clear Amplify/Redux
+      await dispatch(logoutUser()).unwrap();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
-  // Define sidebar links based on role
+  // Memoize or define links based on user role
   const getLinks = () => {
-    switch (user?.role) {
+    const role = user?.role?.toLowerCase(); // Ensure case-insensitive matching
+    switch (role) {
       case 'admin':
         return [
           { label: 'Overview', path: '/admin/dashboard', icon: <FaHome /> },
@@ -34,7 +39,7 @@ const DashboardLayout = () => {
         ];
       case 'patient':
         return [
-        { label: 'Overview', path: '/patient/dashboard', icon: <FaHome /> },
+          { label: 'Overview', path: '/patient/dashboard', icon: <FaHome /> },
           { label: 'Book Appointment', path: '/patient/book-appointment', icon: <FaCalendarAlt /> },
           { label: 'Find Doctors', path: '/doctors', icon: <FaUserMd /> },
         ];
@@ -43,58 +48,77 @@ const DashboardLayout = () => {
     }
   };
 
+  // Helper for active link styling
+  const navLinkClass = ({ isActive }) => 
+    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+      isActive 
+        ? 'bg-blue-50 text-blue-600 font-semibold shadow-sm' 
+        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+    }`;
+
   return (
     <div className="flex h-screen bg-slate-50">
-      {/* Sidebar */}
+      {/* Sidebar - Desktop */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <span className="text-xl font-bold text-primary">DocAppoint</span>
+        <div className="h-20 flex items-center px-6 border-b border-gray-100">
+          <span className="text-2xl font-bold text-blue-600 tracking-tight">DocAppoint</span>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-1">
           {getLinks().map((link) => (
-            <Link 
+            <NavLink 
               key={link.path} 
               to={link.path}
-              className="flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-blue-50 hover:text-primary rounded-lg transition-colors"
+              className={navLinkClass}
             >
-              {link.icon}
-              <span className="font-medium">{link.label}</span>
-            </Link>
+              <span className="text-lg">{link.icon}</span>
+              <span>{link.label}</span>
+            </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {user?.name.charAt(0)}
+        {/* User Profile Section */}
+        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+          <div className="flex items-center gap-3 px-2 py-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{user?.name}</p>
-              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+              <p className="text-sm font-bold text-gray-900 truncate">{user?.name || 'User'}</p>
+              <p className="text-xs text-blue-600 font-medium capitalize">{user?.role || 'Guest'}</p>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-xl transition-all text-sm font-semibold disabled:opacity-50"
           >
-            <FaSignOutAlt /> Sign Out
+            <FaSignOutAlt /> {loading ? 'Signing Out...' : 'Sign Out'}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-8 md:hidden">
-           {/* Mobile Header (simplified) */}
-           <span className="font-bold text-primary">DocAppoint</span>
-           <button onClick={handleLogout} className="text-red-500"><FaSignOutAlt /></button>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Mobile Header */}
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 md:hidden flex-shrink-0">
+           <span className="font-bold text-blue-600 text-lg">DocAppoint</span>
+           <button 
+             onClick={handleLogout} 
+             className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+             aria-label="Sign Out"
+           >
+             <FaSignOutAlt size={20} />
+           </button>
         </header>
         
-        <div className="p-8">
-          <Outlet /> {/* This is where the specific dashboard content loads */}
-        </div>
-      </main>
+        {/* Content Container */}
+        <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-8">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

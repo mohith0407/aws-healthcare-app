@@ -19,6 +19,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
+        - ses:SendEmail
       Resource: "*"
 
 # --- API ENDPOINTS (FUNCTIONS) ---
@@ -74,6 +75,14 @@ functions:
           path: slots
           method: get
           cors: true
+  # 7. Send admin email alert
+  sendDoctorAlert:
+    handler: src/triggers/postConfirmation.handler
+    events:
+      - cognitoUserPool:
+          pool: ${self:service}-user-pool-${self:provider.stage} # References the resource above
+          trigger: PostConfirmation
+          existing: true
 # --- INFRASTRUCTURE (DATABASE TABLES) ---
 resources:
   Resources:
@@ -86,9 +95,19 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
+          - AttributeName: specialization
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
+        # Global Secondary Index (GSI) to filter by Specialization
+        GlobalSecondaryIndexes:
+          - IndexName: SpecializationIndex
+            KeySchema:
+              - AttributeName: specialization
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
 
     # 2. Appointments Table
@@ -100,7 +119,70 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
+          - AttributeName: doctorId
+            AttributeType: S
+          - AttributeName: patientId
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
+        # GSIs to let Doctors and Patients find their own appointments
+        GlobalSecondaryIndexes:
+          - IndexName: DoctorAppointmentsIndex
+            KeySchema:
+              - AttributeName: doctorId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: PatientAppointmentsIndex
+            KeySchema:
+              - AttributeName: patientId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-user-pool-${self:provider.stage}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        # 1. Add Schema for Custom Fields
+        Schema:
+          - Name: role
+            AttributeDataType: String
+            Mutable: true
+          - Name: specialization
+            AttributeDataType: String
+            Mutable: true
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireNumbers: true
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-client-${self:provider.stage}
+        UserPoolId:
+          Ref: CognitoUserPool
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+        GenerateSecret: false
+        # 2. Allow Frontend to Write these Fields
+        WriteAttributes:
+          - email
+          - name
+          - phone_number
+          - custom:role
+          - custom:specialization
+  Outputs:
+      UserPoolId:
+        Value:
+          Ref: CognitoUserPool
+      UserPoolClientId:
+        Value:
+          Ref: CognitoUserPoolClient
+        
