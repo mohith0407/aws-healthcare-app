@@ -56,13 +56,15 @@ module.exports.getSlots = async (event) => {
 module.exports.update = async (event) => {
   try {
     const { id } = event.pathParameters;
-    const { status } = JSON.parse(event.body);
+    // Extract optional date/slot for rescheduling
+    const { status, date, slot } = JSON.parse(event.body); 
 
     if (!id || !status) {
       return response.error(400, 'Missing appointment ID or status');
     }
 
-    const result = await appointmentService.updateStatus(id, status);
+    // Pass the reschedule data object
+    const result = await appointmentService.updateStatus(id, status, { date, slot });
     return response.success(result);
   } catch (error) {
     console.error("Update Error:", error);
