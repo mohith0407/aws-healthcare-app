@@ -16,8 +16,9 @@ import { Amplify } from 'aws-amplify';
 Amplify.configure({
   Auth: {
     Cognito: {
-      userPoolId: 'ap-south-1_IJ6DZTNkS',
-      userPoolClientId: '17qkl3hmudgomlkg881cpj7elf',
+      region: import.meta.env.VITE_AWS_REGION || 'ap-south-1',
+      userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+      userPoolClientId: import.meta.env.VITE_COGNITO_APP_CLIENT_ID,
     }
   }
 });

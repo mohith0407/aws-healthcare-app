@@ -201,7 +201,7 @@ const PatientDashboard = () => {
            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
              <h3 className="font-bold text-gray-800 mb-4">Popular Specialties</h3>
              <div className="flex flex-wrap gap-2">
-               {['Cardiology', 'Dermatology', 'Neurology', 'General', 'Pediatrics'].map(tag => (
+               {['Cardiologist', 'Dermatologist', 'Neurologist', 'General', 'Pediatrics'].map(tag => (
                  <button 
                    key={tag}
                    onClick={() => setSearchTerm(tag)} 

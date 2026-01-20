@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // Replace with your actual API URL from Step 1
-const API_URL = 'https://sr2mp9qm50.execute-api.ap-south-1.amazonaws.com/dev'; 
+const API_URL = import.meta.env.VITE_API_URL; 
 
 // 1. Thunk: Fetch Real Doctors from API
 export const fetchDoctors = createAsyncThunk(

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'https://sr2mp9qm50.execute-api.ap-south-1.amazonaws.com/dev';
+const API_URL =import.meta.env.VITE_API_URL;
 
 // 1. Fetch Appointments (For Patient History & Doctor Dashboard)
 export const fetchAppointments = createAsyncThunk(
