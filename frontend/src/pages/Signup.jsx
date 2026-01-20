@@ -32,7 +32,18 @@ const Signup = () => {
     'Pediatrician', 'General Physician', 'Orthopedic'
   ];
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+  const { name, value } = e.target;
+
+  // 1. Special Logic for Name: Capitalize first letter of every word
+  if (name === 'name') {
+    const titleCaseValue = value.replace(/\b\w/g, (char) => char.toUpperCase());
+    setFormData((prev) => ({ ...prev, [name]: titleCaseValue }));
+  } else {
+    // Standard logic for email/password
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  }
+};
 
   // --- HANDLER 1: SIGN UP ---
   const handleSignup = async (e) => {
