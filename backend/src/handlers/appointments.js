@@ -1,9 +1,16 @@
 const appointmentService = require('../services/appointmentService');
 const response = require('../utils/response');
 
+// 1. BOOK APPOINTMENT
 module.exports.book = async (event) => {
   try {
     const data = JSON.parse(event.body);
+
+    // Validation
+    if (!data.patientId || !data.doctorId || !data.date || !data.slot) {
+      return response.error(400, 'Missing required fields: patientId, doctorId, date, slot');
+    }
+
     const result = await appointmentService.bookAppointment(data);
     return response.success(result);
   } catch (error) {
@@ -12,12 +19,15 @@ module.exports.book = async (event) => {
   }
 };
 
+// 2. LIST APPOINTMENTS
 module.exports.list = async (event) => {
   try {
-    // Get patientId from Query Parameters (e.g., ?patientId=123)
-    const patientId = event.queryStringParameters && event.queryStringParameters.patientId;
+    // Helper to get query params safely
+    const queryParams = event.queryStringParameters || {};
+    console.log("HANDLER RECEIVED PARAMS:", queryParams);
+    // 2. Pass the WHOLE object to the service
+    const appointments = await appointmentService.getAppointments(queryParams);
     
-    const appointments = await appointmentService.getAppointments(patientId);
     return response.success(appointments);
   } catch (error) {
     console.error("Fetch Error:", error);
@@ -25,22 +35,37 @@ module.exports.list = async (event) => {
   }
 };
 
+// 3. GET SLOTS
 module.exports.getSlots = async (event) => {
   try {
-    // 1. Read parameters from the URL (e.g., ?doctorId=1&date=2023-10-25)
     const { doctorId, date } = event.queryStringParameters || {};
 
-    // 2. Validate input
     if (!doctorId || !date) {
-      return response.error(400, 'Missing required parameters: doctorId and date');
+      return response.error(400, 'Missing parameters: doctorId and date');
     }
 
-    // 3. Call the service
     const slots = await appointmentService.getAvailableSlots(doctorId, date);
     return response.success(slots);
-
   } catch (error) {
     console.error("Slot Error:", error);
     return response.error(500, 'Could not fetch slots');
+  }
+};
+
+// 4. UPDATE STATUS (New Handler for Doctor Dashboard)
+module.exports.update = async (event) => {
+  try {
+    const { id } = event.pathParameters;
+    const { status } = JSON.parse(event.body);
+
+    if (!id || !status) {
+      return response.error(400, 'Missing appointment ID or status');
+    }
+
+    const result = await appointmentService.updateStatus(id, status);
+    return response.success(result);
+  } catch (error) {
+    console.error("Update Error:", error);
+    return response.error(500, 'Could not update appointment');
   }
 };

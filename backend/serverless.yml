@@ -8,8 +8,6 @@ provider:
   environment:
     DOCTORS_TABLE: ${self:service}-${self:provider.stage}-doctors
     APPOINTMENTS_TABLE: ${self:service}-${self:provider.stage}-appointments
-  # --- SECURITY PERMISSIONS ---
-  # This section gives your Lambda functions permission to Read/Write to DynamoDB
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -22,9 +20,7 @@ provider:
         - ses:SendEmail
       Resource: "*"
 
-# --- API ENDPOINTS (FUNCTIONS) ---
 functions:
-  # 1. Health Check
   healthCheck:
     handler: handler.healthCheck
     events:
@@ -33,7 +29,6 @@ functions:
           method: get
           cors: true
 
-  # 2. Get List of Doctors
   getDoctors:
     handler: src/handlers/doctors.list
     events:
@@ -42,16 +37,14 @@ functions:
           method: get
           cors: true
 
-  # 3. Create a Doctor (For internal use/seeding)
   createDoctor:
-    handler: src/handler/doctors.create
+    handler: src/handlers/doctors.create
     events:
       - http:
           path: doctors
           method: post
           cors: true
 
-  # 4. Book Appointment
   bookAppointment:
     handler: src/handlers/appointments.book
     events:
@@ -59,7 +52,7 @@ functions:
           path: appointments
           method: post
           cors: true
-  # 5. Get Patient Appointments
+
   getAppointments:
     handler: src/handlers/appointments.list
     events:
@@ -67,7 +60,7 @@ functions:
           path: appointments
           method: get
           cors: true
-  # 6. Get Available Slots
+
   getAvailableSlots:
     handler: src/handlers/appointments.getSlots
     events:
@@ -75,22 +68,26 @@ functions:
           path: slots
           method: get
           cors: true
-  # 7. Send admin email alert
+  updateAppointment:
+    handler: src/handlers/appointments.update
+    events:
+      - http:
+          path: appointments/{id}
+          method: put
+          cors: true
+
   sendDoctorAlert:
     handler: src/triggers/postConfirmation.handler
     events:
       - cognitoUserPool:
-          pool: ${self:service}-user-pool-${self:provider.stage} # References the resource above
+          pool: ${self:service}-user-pool-${self:provider.stage}
           trigger: PostConfirmation
-          existing: true
-# --- INFRASTRUCTURE (DATABASE TABLES) ---
+
 resources:
   Resources:
-    # 1. Doctors Table
     DoctorsTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
-        # Creates table name: healthcare-api-dev-doctors
         TableName: ${self:service}-${self:provider.stage}-doctors
         AttributeDefinitions:
           - AttributeName: id
@@ -100,7 +97,6 @@ resources:
         KeySchema:
           - AttributeName: id
             KeyType: HASH
-        # Global Secondary Index (GSI) to filter by Specialization
         GlobalSecondaryIndexes:
           - IndexName: SpecializationIndex
             KeySchema:
@@ -110,11 +106,9 @@ resources:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
 
-    # 2. Appointments Table
     AppointmentsTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
-        # Creates table name: healthcare-api-dev-appointments
         TableName: ${self:service}-${self:provider.stage}-appointments
         AttributeDefinitions:
           - AttributeName: id
@@ -126,7 +120,6 @@ resources:
         KeySchema:
           - AttributeName: id
             KeyType: HASH
-        # GSIs to let Doctors and Patients find their own appointments
         GlobalSecondaryIndexes:
           - IndexName: DoctorAppointmentsIndex
             KeySchema:
@@ -141,6 +134,7 @@ resources:
             Projection:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
+
     CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
@@ -149,7 +143,6 @@ resources:
           - email
         AutoVerifiedAttributes:
           - email
-        # 1. Add Schema for Custom Fields
         Schema:
           - Name: role
             AttributeDataType: String
@@ -171,18 +164,26 @@ resources:
         ExplicitAuthFlows:
           - ADMIN_NO_SRP_AUTH
         GenerateSecret: false
-        # 2. Allow Frontend to Write these Fields
         WriteAttributes:
           - email
           - name
           - phone_number
           - custom:role
           - custom:specialization
+    PostConfirmationLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        # This references your function: sendDoctorAlert -> SendDoctorAlertLambdaFunction
+        FunctionName: !GetAtt SendDoctorAlertLambdaFunction.Arn 
+        Principal: cognito-idp.amazonaws.com
+        # This allows ONLY your specific User Pool to trigger it
+        SourceArn: !GetAtt CognitoUserPool.Arn
+
   Outputs:
-      UserPoolId:
-        Value:
-          Ref: CognitoUserPool
-      UserPoolClientId:
-        Value:
-          Ref: CognitoUserPoolClient
-        
+    UserPoolId:
+      Value:
+        Ref: CognitoUserPool
+    UserPoolClientId:
+      Value:
+        Ref: CognitoUserPoolClient
