@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/organisms/Navbar';
 import Button from '../components/atoms/Button';
-import Seo from '../components/utils/Seo'; // Import the new SEO component
-
+import Seo from '../components/utils/Seo'; 
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 const Home = () => {
+  const navigate = useNavigate();
+  // 2. Get User from Redux State
+  const { user } = useSelector((state) => state.auth);
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') navigate('/admin/dashboard');
+      else if (user.role === 'doctor') navigate('/doctor/dashboard');
+      else navigate('/patient/dashboard'); // Default to patient
+    }
+  }, [user, navigate]);
+  if (user) return null;
   return (
     <div className="min-h-screen flex flex-col">
       {/* Dynamic SEO Tags */}
