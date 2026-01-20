@@ -78,18 +78,38 @@ const getAvailableSlots = async (doctorId, date) => {
 };
 
 // 4. UPDATE STATUS
-const updateStatus = async (id, status) => {
+const updateStatus = async (id, status, rescheduleData = null) => {
+  let updateExpression = 'set #status = :status';
+  let expressionAttributeNames = { '#status': 'status' };
+  let expressionAttributeValues = { ':status': status };
+
+  // If rescheduling, update date and slot too
+  if (status === 'rescheduled' && rescheduleData) {
+    updateExpression += ', #date = :date, #slot = :slot';
+    expressionAttributeNames['#date'] = 'date';
+    expressionAttributeNames['#slot'] = 'slot';
+    expressionAttributeValues[':date'] = rescheduleData.date;
+    expressionAttributeValues[':slot'] = rescheduleData.slot;
+  }
+
   const params = {
     TableName: TABLE_NAME,
     Key: { id },
-    UpdateExpression: 'set #status = :status',
-    ExpressionAttributeNames: { '#status': 'status' },
-    ExpressionAttributeValues: { ':status': status },
+    UpdateExpression: updateExpression,
+    ExpressionAttributeNames: expressionAttributeNames,
+    ExpressionAttributeValues: expressionAttributeValues,
     ReturnValues: 'ALL_NEW',
   };
 
   const result = await dynamoDb.update(params).promise();
   return result.Attributes;
+};
+
+module.exports = { 
+  bookAppointment, 
+  getAppointments, 
+  getAvailableSlots,
+  updateStatus 
 };
 
 module.exports = { 

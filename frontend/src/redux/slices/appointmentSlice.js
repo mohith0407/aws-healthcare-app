@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'https://sr2mp9qm50.execute-api.ap-south-1.amazonaws.com/dev'; 
+const API_URL = 'https://sr2mp9qm50.execute-api.ap-south-1.amazonaws.com/dev';
 
 // 1. Fetch Appointments (For Patient History & Doctor Dashboard)
 export const fetchAppointments = createAsyncThunk(
@@ -49,10 +49,12 @@ export const bookAppointment = createAsyncThunk(
 // 4. Update Status (For Doctor Dashboard - Accept/Reschedule)
 export const updateAppointmentStatus = createAsyncThunk(
   'appointments/updateStatus',
-  async ({ id, status }, { rejectWithValue }) => {
+  // Accept extra params in the object
+  async ({ id, status, date, slot }, { rejectWithValue }) => {
     try {
-      await axios.put(`${API_URL}/appointments/${id}`, { status });
-      return { id, status }; 
+      // Send them to backend
+      await axios.put(`${API_URL}/appointments/${id}`, { status, date, slot });
+      return { id, status, date, slot };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Update failed');
     }
@@ -94,7 +96,7 @@ const appointmentSlice = createSlice({
       // --- Fetch Slots ---
       .addCase(fetchSlots.pending, (state) => {
         // We don't necessarily need global loading for slots, but we can clear previous slots
-        state.slots = []; 
+        state.slots = [];
       })
       .addCase(fetchSlots.fulfilled, (state, action) => {
         state.slots = action.payload;
@@ -120,6 +122,9 @@ const appointmentSlice = createSlice({
         const index = state.list.findIndex(appt => appt.id === action.payload.id);
         if (index !== -1) {
           state.list[index].status = action.payload.status;
+          // Update date/slot if provided
+          if (action.payload.date) state.list[index].date = action.payload.date;
+          if (action.payload.slot) state.list[index].slot = action.payload.slot;
         }
       });
   },
