@@ -80,8 +80,9 @@ functions:
     handler: src/triggers/postConfirmation.handler
     events:
       - cognitoUserPool:
-          pool: CognitoUserPool # References the resource above
+          pool: ${self:service}-user-pool-${self:provider.stage} # References the resource above
           trigger: PostConfirmation
+          existing: true
 # --- INFRASTRUCTURE (DATABASE TABLES) ---
 resources:
   Resources:
