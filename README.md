@@ -224,7 +224,7 @@ aws s3 sync dist/ s3://[your-bucket-name] --delete
 
 ## License
 
-
+This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LICENSE) file for details.
 
 ------------------------------------------------------------------------
 
