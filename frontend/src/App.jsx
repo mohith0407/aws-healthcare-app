@@ -1,8 +1,11 @@
 // src/App.jsx
 import { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import ProtectedRoute from './components/utils/ProtectedRoute';
 import DashboardLayout from './components/templates/DashboardLayout';
+import { fetchUserAttributes, getCurrentUser } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
+import { useEffect } from 'react';
 // import  from './pages/patient/MyAppointments';
 
 // Lazy Load Pages
@@ -24,6 +27,49 @@ const PageLoader = () => (
 );
 
 function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // 1. Define the Traffic Controller Logic
+    const checkUserAndRedirect = async () => {
+      try {
+        // Check if user is logged in
+        await getCurrentUser();
+        
+        // Get their profile details (Role)
+        const attributes = await fetchUserAttributes();
+        const role = attributes['custom:role'];
+
+        console.log("User detected. Role:", role);
+
+        // --- THE REDIRECT LOGIC ---
+        if (role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (role === 'doctor') {
+          navigate('/doctor/dashboard');
+        } else {
+          // If role is undefined (Google User) or 'patient'
+          navigate('/patient/dashboard');
+        }
+      } catch (err) {
+        // User is not logged in, do nothing (stay on landing/login page)
+        console.log("User not logged in yet");
+      }
+    };
+
+    // 2. Listen for "SignIn" events (Triggers after Google Redirect)
+    const hubListener = Hub.listen('auth', ({ payload }) => {
+      if (payload.event === 'signedIn') {
+        checkUserAndRedirect();
+      }
+    });
+
+    // 3. Also check on initial App Load (in case they refresh the page)
+    checkUserAndRedirect();
+
+    // Cleanup listener
+    return () => hubListener();
+  }, [navigate]);
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>

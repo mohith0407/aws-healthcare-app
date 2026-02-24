@@ -11,7 +11,7 @@ const DOCTORS_TABLE = process.env.DOCTORS_TABLE ||
 'healthcare-api-dev-doctors';
 
 exports.handler = async (event) => {
-  console.log("EVENT:", JSON.stringify(event, null, 2)); // Good for debugging
+  // console.log("EVENT:", JSON.stringify(event, null, 2)); // Good for debugging
 
   const { sub, email, name, phone_number } = event.request.userAttributes;
   const role = event.request.userAttributes['custom:role'];

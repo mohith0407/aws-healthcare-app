@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/slices/authSlice'; 
+// --- V6 CHANGE ---
+import { signInWithRedirect, signOut } from 'aws-amplify/auth'; 
+// -----------------
 
 import InputGroup from '../components/atoms/InputGroup';
 import Button from '../components/atoms/Button';
@@ -12,7 +15,6 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  // Get Redux State
   const { loading, error } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -24,14 +26,12 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 1. Dispatch Login Action
+    // Regular Email/Password Login (Handled by your Redux)
     const resultAction = await dispatch(loginUser(formData));
 
-    // 2. Check if login succeeded
     if (loginUser.fulfilled.match(resultAction)) {
       const user = resultAction.payload;
       
-      // 3. Dynamic Redirect based on Role
       if (user.role === 'admin') {
         navigate('/admin-dashboard');
       } else if (user.role === 'doctor') {
@@ -56,36 +56,32 @@ const Login = () => {
           </div>
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {/* Show Redux Error */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded">
                 {error}
               </div>
             )}
             
-            <InputGroup 
-              label="Email Address" 
-              name="email" 
-              type="email" 
-              placeholder="you@example.com" 
-              value={formData.email} 
-              onChange={handleChange} 
-              required 
-            />
-            
-            <InputGroup 
-              label="Password" 
-              name="password" 
-              type="password" 
-              placeholder="••••••••" 
-              value={formData.password} 
-              onChange={handleChange} 
-              required 
-            />
+            <InputGroup label="Email Address" name="email" type="email" placeholder="you@example.com" value={formData.email} onChange={handleChange} required />
+            <InputGroup label="Password" name="password" type="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required />
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Signing In...' : 'Sign In'}
             </Button>
+
+            {/* --- GOOGLE BUTTON SECTION --- */}
+            {/* <div className="relative flex items-center justify-center my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative z-10 bg-white px-2 text-gray-500 text-sm">
+                  Or continue with
+                </div>
+            </div>
+            
+            <GoogleButton /> */}
+            {/* ----------------------------- */}
+
           </form>
 
           <p className="text-center text-sm text-gray-600">
@@ -97,6 +93,33 @@ const Login = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// --- UPDATED V6 GOOGLE BUTTON ---
+export const GoogleButton = () => {
+  const handleGoogleLogin = async () => {
+    try {
+      await signOut();
+      await signInWithRedirect({ provider: 'Google' });
+    } catch (error) {
+      console.error("Google Auth Error:", error);
+    }
+  };
+
+  return (
+    <button 
+      type="button" // Prevent form submission
+      onClick={handleGoogleLogin}
+      className="flex items-center justify-center w-full p-2 border border-gray-300 rounded hover:bg-gray-50 transition"
+    >
+      <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+        alt="G" 
+        className="w-5 h-5 mr-2"
+      />
+      Sign in with Google
+    </button>
   );
 };
 

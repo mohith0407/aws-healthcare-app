@@ -78,10 +78,10 @@ functions:
 
   sendDoctorAlert:
     handler: src/triggers/postConfirmation.handler
-    events:
-      - cognitoUserPool:
-          pool: ${self:service}-user-pool-${sls:stage}
-          trigger: PostConfirmation
+    # events:
+    #   - cognitoUserPool:
+    #       pool: ${self:service}-user-pool-${sls:stage}
+    #       trigger: PostConfirmation
 
 resources:
   Resources:
@@ -170,15 +170,15 @@ resources:
           - phone_number
           - custom:role
           - custom:specialization
-    PostConfirmationLambdaPermission:
-      Type: AWS::Lambda::Permission
-      Properties:
-        Action: lambda:InvokeFunction
-        # This references your function: sendDoctorAlert -> SendDoctorAlertLambdaFunction
-        FunctionName: !GetAtt SendDoctorAlertLambdaFunction.Arn 
-        Principal: cognito-idp.amazonaws.com
-        # This allows ONLY your specific User Pool to trigger it
-        SourceArn: !GetAtt CognitoUserPool.Arn
+    # PostConfirmationLambdaPermission:
+    #   Type: AWS::Lambda::Permission
+    #   Properties:
+    #     Action: lambda:InvokeFunction
+    #     # This references your function: sendDoctorAlert -> SendDoctorAlertLambdaFunction
+    #     FunctionName: !GetAtt SendDoctorAlertLambdaFunction.Arn 
+    #     Principal: cognito-idp.amazonaws.com
+    #     # This allows ONLY your specific User Pool to trigger it
+    #     SourceArn: !GetAtt CognitoUserPool.Arn
 
   Outputs:
     UserPoolId:

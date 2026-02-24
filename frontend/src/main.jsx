@@ -13,12 +13,23 @@ import { store } from './redux/store';
 
 // Amplify Config ---
 import { Amplify } from 'aws-amplify';
+const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN;
+const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
 Amplify.configure({
   Auth: {
     Cognito: {
       region: import.meta.env.VITE_AWS_REGION || 'ap-south-1',
       userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
       userPoolClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
+      loginWith: {
+        oauth: {
+          domain: COGNITO_DOMAIN,
+          scopes: ['email', 'profile', 'openid', 'aws.cognito.signin.user.admin'],
+          redirectSignIn: [FRONTEND_URL],  // Must match Cognito "Allowed Callback URLs"
+          redirectSignOut: [FRONTEND_URL], // Must match Cognito "Allowed Sign-out URLs"
+          responseType: 'code',
+        }
+      }
     }
   }
 });
