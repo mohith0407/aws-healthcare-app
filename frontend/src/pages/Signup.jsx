@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-// --- V6 CHANGE ---
 import { signInWithRedirect } from 'aws-amplify/auth'; 
-// -----------------
 
 import InputGroup from '../components/atoms/InputGroup';
 import SelectGroup from '../../src/components/atoms/SelectGroup'; 
@@ -10,6 +8,10 @@ import Button from '../../src/components/atoms/Button';
 import Navbar from '../../src/components/organisms/Navbar';
 import Seo from '../components/utils/Seo';
 import { signUpAPI, confirmSignUpAPI } from '../services/authServices';
+
+// --- NEW IMPORT ---
+import { createDoctorProfile } from '../services/api'; 
+// ------------------
 
 const Signup = () => {
   const [searchParams] = useSearchParams();
@@ -54,7 +56,22 @@ const Signup = () => {
 
     setIsLoading(true);
     try {
-      await signUpAPI({ ...formData, role });
+      // 1. Create the user in AWS Cognito
+      const authResult = await signUpAPI({ ...formData, role });
+      
+      // 2. NEW: If it's a doctor, also create their profile in DynamoDB
+      if (role === 'doctor' && authResult.userId) {
+        await createDoctorProfile({
+          id: authResult.userId, // Link Database ID to Cognito ID
+          name: formData.name,
+          email: formData.email,
+          specialization: formData.specialization
+          // Note: If you add phone input for doctors later, include it here!
+        });
+        console.log("Doctor profile successfully saved to DynamoDB!");
+      }
+
+      // 3. Move to OTP Verification Step
       setStep(2); 
     } catch (err) {
       setError(err.toString());
@@ -134,7 +151,6 @@ const Signup = () => {
                 </Button>
               </form>
 
-              {/* --- UPDATED V6 GOOGLE BUTTON (Only for Patient) --- */}
               {role === 'patient' && (
                 <>
                   <div className="relative flex items-center justify-center my-6">
@@ -148,7 +164,6 @@ const Signup = () => {
 
                   {/* <button 
                     type="button"
-                    // V6 Syntax:
                     onClick={() => signInWithRedirect({ provider: 'Google' })}
                     className="flex items-center justify-center w-full p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
                   >

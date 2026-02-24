@@ -1,6 +1,6 @@
 // src/App.jsx
-import { Suspense, lazy } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Suspense, lazy, use } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/utils/ProtectedRoute';
 import DashboardLayout from './components/templates/DashboardLayout';
 import { fetchUserAttributes, getCurrentUser } from 'aws-amplify/auth';
@@ -28,7 +28,7 @@ const PageLoader = () => (
 
 function App() {
   const navigate = useNavigate();
-
+  const location = useLocation();
   useEffect(() => {
     // 1. Define the Traffic Controller Logic
     const checkUserAndRedirect = async () => {
@@ -43,20 +43,21 @@ function App() {
         console.log("User detected. Role:", role);
 
         // --- THE REDIRECT LOGIC ---
-        if (role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (role === 'doctor') {
-          navigate('/doctor/dashboard');
-        } else {
-          // If role is undefined (Google User) or 'patient'
-          navigate('/patient/dashboard');
+        if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup') {
+            if (role === 'admin') {
+              navigate('/admin/dashboard', { replace: true });
+            } else if (role === 'doctor') {
+              navigate('/doctor/dashboard', { replace: true });
+            } else {
+              navigate('/patient/dashboard', { replace: true });
+            }
         }
       } catch (err) {
         // User is not logged in, do nothing (stay on landing/login page)
         console.log("User not logged in yet");
       }
     };
-
+    checkUserAndRedirect()
     // 2. Listen for "SignIn" events (Triggers after Google Redirect)
     const hubListener = Hub.listen('auth', ({ payload }) => {
       if (payload.event === 'signedIn') {
@@ -65,11 +66,11 @@ function App() {
     });
 
     // 3. Also check on initial App Load (in case they refresh the page)
-    checkUserAndRedirect();
+    // checkUserAndRedirect();
 
     // Cleanup listener
     return () => hubListener();
-  }, [navigate]);
+  }, [navigate,location.pathname]);
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
@@ -96,16 +97,13 @@ function App() {
 
               <Route element={<ProtectedRoute allowedRoles={['patient']} />}>
                 <Route path="/patient/dashboard" element={<PatientDashboard />} />
+                <Route path="/patient/book-appointment" element={<BookAppointment />} />
+                <Route path="/patient/my-appointments" element={<MyAppointments />} />
               </Route>
 
             </Route>
         </Route>
-        <Route element={<ProtectedRoute allowedRoles={['patient']} />}>
-   <Route path="/patient/dashboard" element={<PatientDashboard />} />
-   {/* NEW ROUTE */}
-   <Route path="/patient/book-appointment" element={<BookAppointment />} />
-   <Route path="/my-appointments" element={<MyAppointments />} />
-</Route>
+        
         {/* 404 Route (Optional but recommended) */}
         <Route path="*" element={<div className="text-center mt-20">404 - Page Not Found</div>} />
       </Routes>
