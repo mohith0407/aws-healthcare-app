@@ -20,6 +20,7 @@ const Signup = () => {
   const [step, setStep] = useState(1); 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const initialRole = searchParams.get('role') === 'doctor' ? 'doctor' : 'patient';
   const [role, setRole] = useState(initialRole);
@@ -141,10 +142,31 @@ const Signup = () => {
                   <SelectGroup label="Specialization" name="specialization" options={specializations} value={formData.specialization} onChange={handleChange} required />
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <InputGroup label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-                  <InputGroup label="Confirm" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} required />
-                </div>
+                <div>
+              <InputGroup 
+                label="Password" 
+                name="password" 
+                
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                value={formData.password} 
+                onChange={handleChange} 
+                required 
+              />
+             
+              <div className="flex items-center mt-2">
+                <input
+                  id="show-password"
+                  type="checkbox"
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"
+                  checked={showPassword}
+                  onChange={() => setShowPassword(!showPassword)}
+                />
+                <label htmlFor="show-password" className="ml-2 block text-sm text-gray-700 cursor-pointer select-none">
+                  Show Password
+                </label>
+              </div>
+            </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Creating Account...' : 'Sign Up'}

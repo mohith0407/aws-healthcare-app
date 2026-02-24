@@ -18,6 +18,7 @@ const Login = () => {
   const { loading, error } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -63,7 +64,31 @@ const Login = () => {
             )}
             
             <InputGroup label="Email Address" name="email" type="email" placeholder="you@example.com" value={formData.email} onChange={handleChange} required />
-            <InputGroup label="Password" name="password" type="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required />
+            <div>
+              <InputGroup 
+                label="Password" 
+                name="password" 
+                
+                type={showPassword ? "text" : "password"} 
+                placeholder="••••••••" 
+                value={formData.password} 
+                onChange={handleChange} 
+                required 
+              />
+             
+              <div className="flex items-center mt-2">
+                <input
+                  id="show-password"
+                  type="checkbox"
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer"
+                  checked={showPassword}
+                  onChange={() => setShowPassword(!showPassword)}
+                />
+                <label htmlFor="show-password" className="ml-2 block text-sm text-gray-700 cursor-pointer select-none">
+                  Show Password
+                </label>
+              </div>
+            </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Signing In...' : 'Sign In'}
