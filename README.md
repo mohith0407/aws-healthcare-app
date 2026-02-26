@@ -22,33 +22,6 @@ costs.
 
 ------------------------------------------------------------------------
 
-## System Architecture
-
-The application follows a **Microservices-based Event-Driven
-Architecture**.\
-The frontend is fully decoupled from the backend and served via a global
-CDN, while backend logic is split into granular AWS Lambda functions.
-
-### Infrastructure Diagram
-# DocAppoint - Serverless Healthcare Platform
-
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![AWS](https://img.shields.io/badge/AWS-Serverless-orange)
-![Infrastructure](https://img.shields.io/badge/IaC-Serverless_Framework-red)
-
-A cloud-native patient and appointment management system architected on **AWS Lambda** and **DynamoDB**. This project demonstrates a fully serverless approach to building scalable, high-availability healthcare applications with near-zero idle costs.
-
----
-
-## Table of Contents
-
-1. [System Architecture](#-system-architecture)
-2. [Technology Stack](#-technology-stack)
-3. [Local Development Setup](#-local-development-setup)
-4. [Deployment Strategy](#-deployment-strategy)
-5. [Security & Features](#-security--features)
-
----
 
 ## System Architecture
 
